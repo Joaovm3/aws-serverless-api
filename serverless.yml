@@ -7,8 +7,35 @@ provider:
 
 functions:
   hello:
-    handler: handler.hello
+    handler: handler.helloWorld
     events:
       - httpApi:
           path: /
           method: get
+  get:
+    handler: handler.get
+    events:
+      - httpApi:
+          path: /get
+          method: get
+  post:
+    handler: handler.post
+    events:
+      - httpApi:
+          path: /post
+          method: post
+  put:
+    handler: handler.put
+    events:
+      - httpApi:
+          path: /put
+          method: put
+  delete:
+    handler: handler.delete
+    events:
+      - httpApi:
+          path: /delete
+          method: delete
+  
+plugins:
+  - serverless-plugin-typescript
