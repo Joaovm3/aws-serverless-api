@@ -4,6 +4,7 @@ frameworkVersion: '3'
 provider:
   name: aws
   runtime: nodejs14.x
+  region: ${opt:region, 'us-east-1'}
 
 functions:
   hello:
@@ -31,7 +32,7 @@ functions:
           path: /put
           method: put
   delete:
-    handler: handler.delete
+    handler: handler.remove
     events:
       - httpApi:
           path: /delete
