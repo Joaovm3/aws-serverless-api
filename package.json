@@ -8,7 +8,9 @@
     "serverless-plugin-typescript": "^2.1.2",
     "typescript": "^4.7.3"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "serverless": "^3.19.0"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
