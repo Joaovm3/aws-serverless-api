@@ -8,6 +8,8 @@ provider:
 
 custom: 
   tableName: Users
+  serverless-offline:
+    httpPort: 4000
 
 functions:
   hello:
@@ -49,6 +51,7 @@ functions:
   
 plugins:
   - serverless-plugin-typescript
+  - serverless-offline
 
 resources:
   Resources:

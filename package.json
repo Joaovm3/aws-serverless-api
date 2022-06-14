@@ -9,7 +9,8 @@
     "typescript": "^4.7.3"
   },
   "devDependencies": {
-    "serverless": "^3.19.0"
+    "serverless": "^3.19.0",
+    "serverless-offline": "^8.8.0"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
