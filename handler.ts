@@ -1,61 +1,129 @@
-import { APIGatewayEvent } from "aws-lambda";
+import { APIGatewayEvent, APIGatewayProxyResult } from 'aws-lambda';
+import { DynamoDB } from 'aws-sdk';
+import { response } from './response';
+interface User {
+  id: number,
+  name: string,
+  age: number,
+}
 
-export const helloWorld = async (event: APIGatewayEvent) => ({
-  statusCode: 200,
-  body: JSON.stringify(
-    {
-      message: "First API Serverless function executed successfully!",
-      queryString: event.queryStringParameters,
-    },
-    null,
-    2
-  ),
+const tableName = process.env.TABLE || 'Users';
+const dynamo = new DynamoDB.DocumentClient({ 
+  region: process.env.REGION || 'us-east-1',
 });
 
-export const get = async (event: APIGatewayEvent) => ({
-  statusCode: 200,
-  body: JSON.stringify(
-    {
-      message: "GET Method",
-      queryString: event,
-    },
-    null,
-    2
-  ),
-});
+const params = {
+  TableName: tableName, 
+};
 
-export const post = async (event: APIGatewayEvent) => ({
-  statusCode: 200,
-  body: JSON.stringify(
-    {
-      message: "POST Method",
-      body: JSON.parse(event.body)
-    },
-    null,
-    2
-  ),
-});
+export const helloWorld = async (event: APIGatewayEvent): Promise<APIGatewayProxyResult> => {
+  const data = {
+    message: 'First API Serverless function with DynamoDB executed successfully!',
+    queryString: event.queryStringParameters,
+  };
 
-export const put = async (event: APIGatewayEvent) => ({
-  statusCode: 200,
-  body: JSON.stringify(
-    {
-      message: "PUT Method",
-      body: JSON.parse(event.body)
-    },
-    null,
-    2
-  ),
-});
+  return response(200, data);
+};
 
-export const remove = async (event: APIGatewayEvent) => ({
-  statusCode: 200,
-  body: JSON.stringify(
-    {
-      message: "DELETE Method",
-      body: JSON.parse(event.body)
+export const getAllUsers = async (): Promise<APIGatewayProxyResult> => {
+  const users = await dynamo.scan(params).promise();
+  const data = {
+    message: 'List all Users',
+    users: users.Items
+  }
+  return response(200, data);
+};
+
+export const getUser = async (event: APIGatewayEvent): Promise<APIGatewayProxyResult> => {
+  if (!event.pathParameters?.id) {
+    return response(400, { message: 'Bad Request' });
+  } 
+  
+  const user = await dynamo
+  .get({
+    ...params,
+    Key: {
+      id: parseInt(event.pathParameters.id),
     },
-    null,
-    2
-  ),
-});
+  })
+  .promise();
+
+  console.log({ user })
+
+  if (!user.Item) {
+    return response(404, { message: 'User not found' });
+  }
+
+  return response(200, { user });
+};
+
+export const createUser = async (event: APIGatewayEvent): Promise<APIGatewayProxyResult> => {
+  const { name, age } = JSON.parse(event.body || '{}');
+
+  const id = Math.floor(1000 + Math.random() * 9000);
+  const user = {
+    id,
+    name,
+    age,
+  }
+
+  await dynamo.put({
+    ...params,
+    Item: user,
+  }).promise();
+
+  const data = {
+    user,
+    message: `User ${id} Created`,
+  }
+
+  return response(200, data);
+};
+
+export const updateUser = async (event: APIGatewayEvent): Promise<APIGatewayProxyResult> => {
+  const { name, age } = JSON.parse(event.body || '{}');
+  const id = Number(event.queryStringParameters?.id);
+
+  const userExists = await dynamo
+  .get({
+    ...params,
+    Key: {
+      id: id,
+    },
+  })
+  .promise();
+
+  console.log({ userExists })
+
+  if (!userExists.Item) {
+    return response(404, { message: 'User not found' });
+  }
+
+  const user = {
+    id,
+    name,
+    age
+  }
+
+  await dynamo.put({
+    ...params,
+    Item: user,
+  }).promise();
+
+  return response (200, { message: `User id ${id} updated` });
+};
+
+export const removeUser = async (event: APIGatewayEvent): Promise<APIGatewayProxyResult> => {
+  const id = Number(event.pathParameters?.id);
+
+  await dynamo
+  .delete({
+    ...params,
+    Key: {
+      id: id,
+    }
+  })
+  .promise();
+
+  return response(204);
+};

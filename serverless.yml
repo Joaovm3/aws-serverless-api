@@ -13,29 +13,35 @@ functions:
       - httpApi:
           path: /
           method: get
-  get:
-    handler: handler.get
+  getAllUsers:
+    handler: handler.getAllUsers
     events:
       - httpApi:
-          path: /get
+          path: /users
           method: get
-  post:
-    handler: handler.post
+  getUser:
+    handler: handler.getUser
     events:
       - httpApi:
-          path: /post
+          path: /users/{id}
+          method: get
+  createUser:
+    handler: handler.createUser
+    events:
+      - httpApi:
+          path: /user
           method: post
-  put:
-    handler: handler.put
+  updateUser:
+    handler: handler.updateUser
     events:
       - httpApi:
-          path: /put
+          path: /user/{id}
           method: put
-  delete:
-    handler: handler.remove
+  removeUser:
+    handler: handler.removeUser
     events:
       - httpApi:
-          path: /delete
+          path: /user/{id}
           method: delete
   
 plugins:
