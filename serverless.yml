@@ -6,6 +6,9 @@ provider:
   runtime: nodejs14.x
   region: ${opt:region, 'us-east-1'}
 
+custom: 
+  tableName: Users
+
 functions:
   hello:
     handler: handler.helloWorld
@@ -46,3 +49,19 @@ functions:
   
 plugins:
   - serverless-plugin-typescript
+
+resources:
+  Resources:
+    UsersTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.tableName}
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: N
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1            
