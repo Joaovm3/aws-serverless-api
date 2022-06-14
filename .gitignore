@@ -1,4 +1,5 @@
 .env
+.build
 
 # package directories
 node_modules
