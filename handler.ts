@@ -1,11 +1,7 @@
 import { APIGatewayEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { DynamoDB } from 'aws-sdk';
+import { User } from './dto';
 import { response } from './response';
-interface User {
-  id: number,
-  name: string,
-  age: number,
-}
 
 const tableName = process.env.TABLE || 'Users';
 const dynamo = new DynamoDB.DocumentClient({ 
@@ -29,8 +25,9 @@ export const getAllUsers = async (): Promise<APIGatewayProxyResult> => {
   const users = await dynamo.scan(params).promise();
   const data = {
     message: 'List all Users',
-    users: users.Items
+    users: users.Items as User[]
   }
+  
   return response(200, data);
 };
 
@@ -48,8 +45,6 @@ export const getUser = async (event: APIGatewayEvent): Promise<APIGatewayProxyRe
   })
   .promise();
 
-  console.log({ user })
-
   if (!user.Item) {
     return response(404, { message: 'User not found' });
   }
@@ -60,9 +55,8 @@ export const getUser = async (event: APIGatewayEvent): Promise<APIGatewayProxyRe
 export const createUser = async (event: APIGatewayEvent): Promise<APIGatewayProxyResult> => {
   const { name, age } = JSON.parse(event.body || '{}');
 
-  const id = Math.floor(1000 + Math.random() * 9000);
-  const user = {
-    id,
+  const user: User = {
+    id: Math.floor(1000 + Math.random() * 9000),
     name,
     age,
   }
@@ -74,15 +68,19 @@ export const createUser = async (event: APIGatewayEvent): Promise<APIGatewayProx
 
   const data = {
     user,
-    message: `User ${id} Created`,
+    message: `User ${user.id} Created`,
   }
 
   return response(200, data);
 };
 
 export const updateUser = async (event: APIGatewayEvent): Promise<APIGatewayProxyResult> => {
+  if (!event.pathParameters?.id) {
+    return response(400, { message: 'Bad Request' });
+  } 
+
   const { name, age } = JSON.parse(event.body || '{}');
-  const id = Number(event.queryStringParameters?.id);
+  const id = parseInt(event.pathParameters?.id);
 
   const userExists = await dynamo
   .get({
@@ -93,21 +91,17 @@ export const updateUser = async (event: APIGatewayEvent): Promise<APIGatewayProx
   })
   .promise();
 
-  console.log({ userExists })
-
   if (!userExists.Item) {
     return response(404, { message: 'User not found' });
   }
 
-  const user = {
-    id,
-    name,
-    age
-  }
-
   await dynamo.put({
     ...params,
-    Item: user,
+    Item: {
+      id,
+      name,
+      age
+    },
   }).promise();
 
   return response (200, { message: `User id ${id} updated` });
